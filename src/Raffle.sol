@@ -43,17 +43,34 @@ contract Raffle is VRFConsumerBaseV2Plus {
     /* State Variables */
     address payable[] private s_players;
     // @dev The duration of the loterry in seconds
+    uint16 private constant REQUEST_CONFIRMATIONS = 3;
+    uint32 private constant NUM_WORDS = 1;
+    uint32 private immutable i_callbackGasLimit;
     uint256 private immutable i_interval;
     uint256 private immutable i_entranceFee;
+    bytes32 private immutable i_keyHash;
+    uint256 private immutable i_subscriptionId;
     uint256 private s_lastTimeStamp;
+    
 
     /* Events */
     event RaffleEntered(address indexed player);
 
-    constructor(uint256 entranceFee, uint256 interval, address _vrfCoordinator) VRFConsumerBaseV2Plus(_vrfCoordinator) {
+    constructor(
+        uint256 entranceFee,
+        uint256 interval, 
+        address _vrfCoordinator, 
+        bytes32 gasLane,
+        uint256 subscriptionId,
+        uint32 callbackGasLimit
+        ) 
+        VRFConsumerBaseV2Plus(_vrfCoordinator) {
         i_entranceFee = entranceFee;
         i_interval = interval;
         s_lastTimeStamp = block.timestamp;
+        i_keyHash = gasLane;
+        i_subscriptionId = subscriptionId;
+        i_callbackGasLimit = callbackGasLimit;
     }
 
     /* Functions */
@@ -76,24 +93,27 @@ contract Raffle is VRFConsumerBaseV2Plus {
         // Get our random number from Chainlink Variable Randomness Function
         // 1.Request RNG
         // 2.Get RNG
-        uint256 requestId = s_vrfCoordinator.requestRandomWords(
-            VRFV2PlusClient.RandomWordsRequest({
-                keyHash: s_keyHash,
-                subId: s_subscriptionId,
-                requestConfirmations: requestConfirmations,
-                callbackGasLimit: callbackGasLimit,
-                numWords: numWords,
+        VRFV2PlusClient.RandomWordsRequest memory request = VRFV2PlusClient.RandomWordsRequest({
+                keyHash: i_keyHash,
+                subId: i_subscriptionId,
+                requestConfirmations: REQUEST_CONFIRMATIONS,
+                callbackGasLimit: i_callbackGasLimit,
+                numWords: NUM_WORDS,
                 extraArgs: VRFV2PlusClient._argsToBytes(
                     // Set nativePayment to true to pay for VRF requests with Sepolia ETH instead of LINK
                     VRFV2PlusClient.ExtraArgsV1({nativePayment: false})
                 )
-            })
-        );
+            });
+        uint256 requestId = s_vrfCoordinator.requestRandomWords(request);
     }
+
+    function fulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) internal override {}
 
     /** Getter Functions */
 
     function getEntranceFee() external view returns (uint256) {
         return i_entranceFee;
     }
+
+
 } 
