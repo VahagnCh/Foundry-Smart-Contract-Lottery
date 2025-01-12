@@ -7,7 +7,11 @@ import {VRFCoordinatorV2_5Mock} from "@chainlink/contracts/src/v0.8/vrf/mocks/VR
 
 abstract contract CodeConstants {
     /* VRF Mock Values */
-    
+     uint96 public MOCK_BASE_FEE = 0.25 ether;
+     uint96 public MOCK_GAS_PRICE_LINK = 1e9;
+     // LINK / ETH price
+    int256 public MOCK_WEI_PER_UNIT_LINK = 4e15;
+
     uint256 public constant ETH_SEPOLIA_CHAIN_ID = 1115511;
     uint256 public constant LOCAL_CHAIN_ID = 31337;
 }
@@ -20,9 +24,8 @@ contract HelperConfig is CodeConstants, Script {
         uint256 interval; 
         address _vrfCoordinator;
         bytes32 gasLane;
-        uint256 subscriptionId;
+        uint64 subscriptionId;
         uint32 callbackGasLimit;
-        
     }
 
     NetworkConfig public localNetworkConfig;
@@ -43,6 +46,10 @@ contract HelperConfig is CodeConstants, Script {
     
     }
 
+    function getConfig() public returns (NetworkConfig memory) {
+        return getConfigByChainId(block.chainid);
+    }
+
     function getSepoliaEthConfig() public pure returns (NetworkConfig memory) {
         return NetworkConfig({
             entranceFee: 0.01 ether, // 1e16
@@ -61,9 +68,22 @@ contract HelperConfig is CodeConstants, Script {
         }
         // Depoloy Mocks
         vm.startBroadcast();
-        VRFCoordinatorV2_5Mock vrfCoordinatorMock = new VRFCoordinatorV2_5Mock();
+        VRFCoordinatorV2_5Mock vrfCoordinatorMock = new VRFCoordinatorV2_5Mock(
+            MOCK_BASE_FEE, 
+            MOCK_GAS_PRICE_LINK, 
+            MOCK_WEI_PER_UNIT_LINK
+        );
         vm.stopBroadcast();
 
-
+        localNetworkConfig = NetworkConfig({
+            entranceFee: 0.01 ether,
+            interval: 30 seconds,
+            _vrfCoordinator: address(vrfCoordinatorMock),
+            // Does not matter for local network
+            gasLane: 0x474e34a077df58807dbe9c96d3c009b23b3c6d0cce433e59bbf5b34f823bc56c,
+            subscriptionId: 0,
+            callbackGasLimit: 500000
+        });
+        return localNetworkConfig;
     }
 }
