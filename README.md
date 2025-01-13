@@ -2,6 +2,8 @@
 
 A decentralized and automated raffle system built with Foundry that uses Chainlink VRF (Verifiable Random Function) for transparent and provably fair winner selection.
 
+> This project was created as part of the [Cyfrin Updraft](https://updraft.cyfrin.io/) Foundry Course.
+
 ## What is a Provably Random Raffle?
 
 A provably random raffle is a lottery system where:
