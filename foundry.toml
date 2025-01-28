@@ -6,7 +6,13 @@ remappings = [
     '@chainlink/contracts/=lib/chainlink-brownie-contracts/contracts/',
     '@solmate=lib/solmate/src/'
 ]
+
+fs_permissions = [
+    { access = "read", path = "./broadcast" },
+    { access = "read", path = "./reports" },
+]
 solc_version = "0.8.19"
+fork_url = "http://localhost:8545"  # Anvil's default URL
 
 [etherscan]
 mainnet = { key = "${ETHERSCAN_API_KEY}" }
